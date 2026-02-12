@@ -65,10 +65,17 @@ df = bind_rows(df_pku,
 studies =  df %>%
   filter(variant != 'unk', variant != 'Unknown') %>%
   group_by(location, pmid, study_type) %>% summarize(total=sum(num)) %>% ungroup()
+variants = df %>%
+  group_by(location, pmid) %>% mutate(total=sum(num)) %>% ungroup() %>%
+  mutate(frac=num/total) %>%
+  group_by(variant) %>% summarize(val=sum(frac)) %>%
+  arrange(-val)
+all_variants = variants$variant
 
 variant_lists = list(small=c('R408W', 'c.1066-11G>A', 'IVS10-11G>A', 'P281L'),
                      larger=c('R408W', 'c.1066-11G>A', 'IVS10-11G>A', 'P281L', 'R243X', 'R261Q')
 )
+label_types = c('country (size, study)', 'country (size)', 'country (study)')
 label_type = 'country (size, study)'
 chosen_studies = studies %>% select(location, pmid) # will be user-defined
 
@@ -93,6 +100,7 @@ for (lname in names(variant_lists)) {
 levs = coverages %>% group_by(variant_set) %>% summarize(v=mean(pop_covered)) %>% arrange(-v) %>% .$variant_set
 coverages$variant_set = factor(coverages$variant_set, levels=levs)
 
+# make plot
 coverages %>%
   arrange(as.numeric(variant_set)) %>%
   ggplot(aes(x=label, y=pop_covered, fill=variant_set)) +
