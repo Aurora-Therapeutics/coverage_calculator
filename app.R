@@ -147,7 +147,7 @@ if (file.exists('~/pah/genotype_tables/')) {
   cpku_file = '~/disease_genetics/versions/v1.0/cpku.csv'
   annots_file = '~/disease_genetics/versions/v1.0/annots.csv'
 } else {
-  gt_file = '~/data/genotype_tables/combined.csv'
+  gt_file = '~/data/genotype_tables/v1.0/combined.csv'
   bb_file = '~/disease_genetics/versions/v1.0/pku.csv'
   cpku_file = '~/disease_genetics/versions/v1.0/cpku.csv'
   annots_file = '~/disease_genetics/versions/v1.0/annots.csv'
