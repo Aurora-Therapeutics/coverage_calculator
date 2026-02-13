@@ -5,12 +5,17 @@ library(shiny)
 library(jcolors)
 # library(ggpattern)
 
-source('~/src/coverage/coordinate_conversion.r')
+script_dir = '~/src/coverage/'
+source(glue("{script_dir}/coordinate_conversion.r"))
+
 
 # --- Data loading (same logic as basic_functionality.R) ---
 
 carriers = 'hetz carriers'
 patientx = 'obs. patients'
+patient_version = '1.0'
+carrier_version = '1.0'
+code_version = system(glue("git -C {script_dir} rev-parse --short HEAD"), intern = TRUE)
 
 load_patient_data <- function(gt_file) {
 
@@ -143,14 +148,14 @@ construct_label <- function(location, pmid, total, label_type) {
 
 if (file.exists('~/pah/genotype_tables/')) {
   gt_file = '~/pah/genotype_tables/combined.csv'
-  bb_file = '~/disease_genetics/versions/v1.0/pku.csv'
-  cpku_file = '~/disease_genetics/versions/v1.0/cpku.csv'
-  annots_file = '~/disease_genetics/versions/v1.0/annots.csv'
+  bb_file = glue('~/disease_genetics/versions/v{carrier_version}/pku.csv')
+  cpku_file = glue('~/disease_genetics/versions/v{carrier_version}/cpku.csv')
+  annots_file = glue('~/disease_genetics/versions/v{carrier_version}/annots.csv')
 } else {
-  gt_file = '~/data/genotype_tables/v1.0/combined.csv'
-  bb_file = '~/disease_genetics/versions/v1.0/pku.csv'
-  cpku_file = '~/disease_genetics/versions/v1.0/cpku.csv'
-  annots_file = '~/disease_genetics/versions/v1.0/annots.csv'
+  gt_file = glue('~/data/genotype_tables/v{patient_version}/combined.csv')
+  bb_file = glue('~/disease_genetics/versions/v{carrier_version}/pku.csv')
+  cpku_file = glue('~/disease_genetics/versions/v{carrier_version}/cpku.csv')
+  annots_file = glue('~/disease_genetics/versions/v{carrier_version}/annots.csv')
 }
 
 df_pku2 = load_carrier_data(bb_file, annots_file)
@@ -253,8 +258,8 @@ ui <- fluidPage(
       tabsetPanel(
         tabPanel("Plot",
                  downloadButton("download_pdf", "Download PDF"),
-                 #plotOutput("coverage_plot", height = "600px")
-                 uiOutput("coverage_plot_ui")
+                 uiOutput("coverage_plot_ui"),
+                 verbatimTextOutput("plot_info")
                  ),
         tabPanel("Data",
                  downloadButton("download_csv", "Download CSV"),
@@ -382,6 +387,24 @@ server <- function(input, output, session) {
     plotOutput("coverage_plot", height = paste0(plot_height, "px"))
   })
 
+  output$plot_info <- renderText({
+    vl <- variant_lists()
+    covs <- coverages_data()
+    vlist_lines <- paste0("  ", names(vl), ": ", sapply(vl, function(v) paste(v, collapse = ", ")))
+    study_labels <- covs %>% select(label) %>% distinct() %>% pull(label)
+    study_lines <- paste0("  ", study_labels)
+    paste(
+      paste0("code: ", code_version,
+             "  |  carrier data: v", carrier_version,
+             "  |  patient data: v", patient_version),
+      "variant lists:",
+      paste(vlist_lines, collapse = "\n"),
+      "studies:",
+      paste(study_lines, collapse = "\n"),
+      sep = "\n"
+    )
+  })
+
   output$download_pdf <- downloadHandler(
     filename = function() { "coverage_plot.pdf" },
     content = function(file) {
@@ -400,6 +423,8 @@ server <- function(input, output, session) {
       write.csv(coverages_data(), file, row.names = FALSE)
     }
   )
+
+
 }
 
 shinyApp(ui, server)
