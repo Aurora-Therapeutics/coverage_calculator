@@ -243,6 +243,10 @@ genomic_to_cdna <- function(introns, pos, ref = NULL, alt = NULL, strand='-') {
   # genomic_start is donor side (cdna_start, +offset), genomic_end is acceptor side (cdna_end, -offset)
   cpos = ifelse(dstart < dend, intronic$cdna_start, intronic$cdna_end)
   relative = ifelse(dstart < dend, paste0('+', dstart), paste0('-', dend))
+  if (!positive && !is.null(ref) && !is.null(alt)) {
+    ref = chartr("ATCG", "TAGC", toupper(ref))
+    alt = chartr("ATCG", "TAGC", toupper(alt))
+  }
   cdna = paste0('c.', cpos, relative, ref, '>', alt)
   return(cdna)
 }

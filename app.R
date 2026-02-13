@@ -54,7 +54,7 @@ load_patient_data <- function(gt_file) {
   df_pku
 }
 
-load_carrier_data <- function(bb_file, annots_file) {
+load_carrier_data <- function(bb_file, annots_file, cpku_file) {
 
   introns = tribble(~intron, ~cdna_start, ~cdna_end, ~genomic_start, ~genomic_end,
                   1, 60, 61,       102917070, 102912899,
@@ -71,7 +71,10 @@ load_carrier_data <- function(bb_file, annots_file) {
                   12, 1315, 1316,  102840399, 102839219,
                   )
 
-  df_pku2 = fread(bb_file) %>%  filter(gene == 'PAH')
+  cpku = fread(cpku_file) %>% mutate(chrm=paste0('chr', chrm))
+  df_pku2 = fread(bb_file) %>%
+    filter(gene == 'PAH') %>%
+    inner_join(cpku, by=c('chrm', 'pos', 'ref', 'alt'))
   population_sizes = tribble(~gnomad_population, ~total_people, ~source, ~pmid,
                              'Admixed American', 30019, 'gnomad',  38057664,
                              'African/African American', 37545, 'gnomad',  38057664,
@@ -93,6 +96,7 @@ load_carrier_data <- function(bb_file, annots_file) {
     stop('fix this')
   }
   df_pku2 = df_pku2 %>%
+    filter(AF > 0) %>%
     inner_join(population_sizes, by='gnomad_population') %>%
     mutate(num=round(AF * total_people * 2)) %>%
     mutate(location=case_when(gnomad_population == 'Japan' & source == 'BBJ' ~ 'Japan: BBJ',
@@ -115,7 +119,8 @@ load_carrier_data <- function(bb_file, annots_file) {
     filter(gene == 'PAH') %>%  select(chrm, pos, ref, alt, cvar)
   cod = annots %>% filter(!is.na(protein_position)) %>%
     rowwise() %>% mutate(cvar=commonize_variant_annots(amino_acids, protein_position)) %>% ungroup() %>%
-    filter(gene == 'PAH') %>%  select(chrm, pos, ref, alt, cvar)
+    filter(gene == 'PAH') %>%  select(chrm, pos, ref, alt, cvar) %>%
+    filter(!grepl('^[0-9]', cvar))
   annotated = bind_rows(nc, cod)
   difficult = tribble(~chrm, ~pos, ~ref, ~alt, ~cvar,
                         'chr12', 102839172, 'GCTTTA', 'G', 'c.1357_*2del',
@@ -158,7 +163,7 @@ if (file.exists('~/pah/genotype_tables/')) {
   annots_file = glue('~/disease_genetics/versions/v{carrier_version}/annots.csv')
 }
 
-df_pku2 = load_carrier_data(bb_file, annots_file)
+df_pku2 = load_carrier_data(bb_file, annots_file, cpku_file)
 df_pku = load_patient_data(gt_file)
 
 df_pku$pmid = as.character(df_pku$pmid)
