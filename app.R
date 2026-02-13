@@ -147,10 +147,10 @@ if (file.exists('~/pah/genotype_tables/')) {
   cpku_file = '~/disease_genetics/versions/v1.0/cpku.csv'
   annots_file = '~/disease_genetics/versions/v1.0/annots.csv'
 } else {
-  gt_file = '~/data/combined.csv'
-  bb_file = '~/data/v1.0/pku.csv'
-  cpku_file = '~/data/v1.0/cpku.csv'
-  annots_file = '~/data/v1.0/annots.csv'
+  gt_file = '~/data/genotype_tables/combined.csv'
+  bb_file = '~/data/versions/v1.0/pku.csv'
+  cpku_file = '~/data/versions/v1.0/cpku.csv'
+  annots_file = '~/data/versions/v1.0/annots.csv'
 }
 
 df_pku2 = load_carrier_data(bb_file, annots_file)
