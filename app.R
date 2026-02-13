@@ -231,7 +231,7 @@ study_choices = setNames(study_values, study_labels)
 #starting_values = starting_values[!is.na(starting_values)]
 
 ui <- fluidPage(
-  titlePanel("PKU Coverage Explorer"),
+  titlePanel("cPKU Coverage Explorer"),
   sidebarLayout(
     sidebarPanel(
       width = 4,
